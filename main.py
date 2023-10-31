@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import functools
 import math
 import itertools
-
+import time
 
 global_r = (1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4)
 global_c = 0
@@ -49,7 +49,7 @@ def proba(t : tuple, n : int):
         print("ERROR proba")
         return(0)
 
-    rep = (fact(8)/(math.prod((fact(i) for i in t))))/(6**n)
+    rep = (fact(n)/(math.prod((fact(i) for i in t))))/(6**n)
     return(rep)
 
 @functools.cache
@@ -92,16 +92,13 @@ def strategy(dice_results : tuple, previous_choices : tuple, nb_available_dices 
     :param score: current_score
     :type score: int
     """
-    #print("--------------")
-    #print(dice_results, previous_choices, nb_available_dices, score)
-    
     reward = rewardfun(score) if previous_choices[0] != 0 else global_c
-    if score > 100:
-        raise RuntimeError
     choice = -1
     possible_choices_1 = {i for i, x in enumerate(dice_results)     if x != 0}
     possible_choices_2 = {i for i, x in enumerate(previous_choices) if x != 1}
     possible_choices = list(possible_choices_1.intersection(possible_choices_2))
+    if reward > 36:
+        raise RuntimeError
     for choice_temp in possible_choices:
         new_choices = list(previous_choices)
         new_choices[choice_temp] = 1
@@ -118,8 +115,19 @@ def strategy(dice_results : tuple, previous_choices : tuple, nb_available_dices 
 
 if __name__ == "__main__":
     initial_throw = dices2state((1, 3, 3, 3, 4, 4, 5, 0))
+    tic = time.time()
     print(strategy(initial_throw, tuple(0 for i in range(6)), 8, 0))
-
+    print(time.time() - tic)
+    
+    initial_throw = dices2state((1, 3, 3, 3, 4, 4, 5, 0))
+    tic = time.time()
+    print(strategy(initial_throw, tuple(0 for i in range(6)), 8, 0))
+    print(time.time() - tic)
+    
+    initial_throw = dices2state((1, 3, 3, 4, 4, 4, 5, 0))
+    tic = time.time()
+    print(strategy(initial_throw, tuple(0 for i in range(6)), 8, 0))
+    print(time.time() - tic)
     
     
 
