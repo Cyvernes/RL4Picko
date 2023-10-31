@@ -83,6 +83,9 @@ def rewardfun(score : int):
 @functools.cache
 def strategy(dice_results : tuple, previous_choices : int, nb_available_dices : int, score : int):
     """Computes the optimal strategy
+    Idée:
+    On peut surement améliorer en mémoisant (dans une fonction interne) sans dice result. 
+    Car on choisit l'action a prendre sur l'espérance sur le lancé de dé. On peut donc mémoiser cette espérance pour ne pas à avoir a sommer à chaque fois
 
     :param dice_results: Results of the dice. dice_results[i] is the number of dice drawing i. O is a worm.
     :type dice_results: tuple
@@ -96,9 +99,8 @@ def strategy(dice_results : tuple, previous_choices : int, nb_available_dices : 
     reward = rewardfun(score) if previous_choices % 2 == 1 else global_c
     choice = -1
     possible_choices = [i for i in range(len(dice_results)) if dice_results[i] != 0 and ((previous_choices >> i) & 1) == 0]
-
     for choice_temp in possible_choices:
-        new_choices = previous_choices + 2**choice_temp
+        new_choices = previous_choices | (1 << choice_temp)
         new_score = score + choice_temp*dice_results[choice_temp]
         new_nb_available_dices = nb_available_dices - dice_results[choice_temp]
         reward_temp = sum(proba(dice_output, new_nb_available_dices) * strategy(dice_output, new_choices, new_nb_available_dices, new_score)[1]
@@ -113,32 +115,23 @@ def strategy(dice_results : tuple, previous_choices : int, nb_available_dices : 
 
 if __name__ == "__main__":
     
+    
     initial_throw = dices2state((1, 3, 3, 3, 4, 4, 5, 0))
     tic = time.time()
     print(strategy(initial_throw, 0, 8, 0))
     print(time.time() - tic)
     
-    
-    initial_throw = dices2state((1, 3, 3, 4, 4, 4, 5, 0))
+    initial_throw = dices2state((1, 3, 3, 3, 4, 5, 5, 0))
     tic = time.time()
     print(strategy(initial_throw, 0, 8, 0))
     print(time.time() - tic)
     
-    
-    initial_throw = dices2state((1, 2, 3, 2, 4, 5, 5, 0))
+    initial_throw = dices2state((1, 3, 3, 3, 5, 5, 5, 0))
     tic = time.time()
     print(strategy(initial_throw, 0, 8, 0))
     print(time.time() - tic)
     
-    initial_throw = dices2state((1, 2, 3, 2, 4, 5, 5, 5))
+    initial_throw = dices2state((1, 3, 3, 5, 5, 5, 5, 0))
     tic = time.time()
     print(strategy(initial_throw, 0, 8, 0))
     print(time.time() - tic)
-    
-    initial_throw = dices2state((5, 5, 5, 5, 5, 1, 5))
-    tic = time.time()
-    print(strategy(initial_throw, 1, 7, 0))
-    print(time.time() - tic)
-    
-    
-
