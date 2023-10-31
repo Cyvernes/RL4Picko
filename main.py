@@ -75,6 +75,7 @@ def rewardfun(score : int):
         return(global_c)
     elif score > 36:
         print(f"ERROR rewardfun {score}")
+        raise RuntimeError
         return(0)
     else:
         return(global_r[score - 21])
@@ -94,17 +95,14 @@ def strategy(dice_results : tuple, previous_choices : tuple, nb_available_dices 
     """
     reward = rewardfun(score) if previous_choices[0] != 0 else global_c
     choice = -1
-    possible_choices_1 = {i for i, x in enumerate(dice_results)     if x != 0}
-    possible_choices_2 = {i for i, x in enumerate(previous_choices) if x != 1}
-    possible_choices = list(possible_choices_1.intersection(possible_choices_2))
-    if reward > 36:
-        raise RuntimeError
+    possible_choices = [i for i, x in enumerate(zip(dice_results, previous_choices))     if (x[0] != 0 and x[1] == 0)]
+
     for choice_temp in possible_choices:
         new_choices = list(previous_choices)
         new_choices[choice_temp] = 1
         new_choices = tuple(new_choices)
-        new_score = score + choice_temp*dice_results[choice]
-        new_nb_available_dices = nb_available_dices - dice_results[choice]
+        new_score = score + choice_temp*dice_results[choice_temp]
+        new_nb_available_dices = nb_available_dices - dice_results[choice_temp]
         reward_temp = sum(proba(dice_output, new_nb_available_dices) * strategy(dice_output, new_choices, new_nb_available_dices, new_score)[1] for dice_output in all_possible_dices_outputs(new_nb_available_dices))
         if reward_temp > reward:
             reward = reward_temp
@@ -119,15 +117,26 @@ if __name__ == "__main__":
     print(strategy(initial_throw, tuple(0 for i in range(6)), 8, 0))
     print(time.time() - tic)
     
-    initial_throw = dices2state((1, 3, 3, 3, 4, 4, 5, 0))
-    tic = time.time()
-    print(strategy(initial_throw, tuple(0 for i in range(6)), 8, 0))
-    print(time.time() - tic)
     
     initial_throw = dices2state((1, 3, 3, 4, 4, 4, 5, 0))
     tic = time.time()
     print(strategy(initial_throw, tuple(0 for i in range(6)), 8, 0))
     print(time.time() - tic)
     
+    
+    initial_throw = dices2state((1, 2, 3, 2, 4, 5, 5, 0))
+    tic = time.time()
+    print(strategy(initial_throw, tuple(0 for i in range(6)), 8, 0))
+    print(time.time() - tic)
+    
+    initial_throw = dices2state((1, 2, 3, 2, 4, 5, 5, 5))
+    tic = time.time()
+    print(strategy(initial_throw, tuple(0 for i in range(6)), 8, 0))
+    print(time.time() - tic)
+    
+    initial_throw = dices2state((1, 1, 1, 1, 1, 1, 1, 0))
+    tic = time.time()
+    print(strategy(initial_throw, tuple(0 for i in range(6)), 8, 0))
+    print(time.time() - tic)
     
 
