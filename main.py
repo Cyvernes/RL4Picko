@@ -7,6 +7,8 @@ import time
 
 global_r = (1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4)
 global_c = 0
+N_DICE = 8
+N_FACES = 6
 
 @functools.cache
 def fact(n: int):
@@ -17,20 +19,20 @@ def fact(n: int):
     """
     return(math.factorial(n))
 
-def draw_dices():
-    """Draws 8 dices and gives the result in ascending order
+def draw_dice():
+    """Draws N dice and gives the result in ascending order
     """
-    dices = np.random.randint(0, 6, 8)
-    return(dices2state(dices))
+    dice = np.random.randint(0, N_FACES, N_DICE)
+    return(dice2state(dice))
 
-def dices2state(dices):
+def dice2state(dice):
     """Transforms raw dice results into the usual representation 
 
-    :param dices: Results of the dices
-    :type dices: iterable(int)
+    :param dice: Results of the dice
+    :type dice: iterable(int)
     """
-    temp = [0 for i in range(6)]
-    for d in dices:
+    temp = [0 for i in range(N_FACES)]
+    for d in dice:
         temp[d] +=1
     rep = tuple(temp)
     return(rep)
@@ -38,37 +40,37 @@ def dices2state(dices):
 
 @functools.cache
 def proba(t : tuple, n : int):
-    """Computes the probability of each state after drawing 8 dices
+    """Computes the probability of each state after drawing N dice
 
     :param t: state
     :type t: tuple
-    :param n: number of dices
+    :param n: number of dice
     :type n: int
     """
     if sum(t) != n:
         print("ERROR proba")
         return(0)
 
-    rep = (fact(n)/(math.prod((fact(i) for i in t))))/(6**n)
+    rep = (fact(n)/(math.prod((fact(i) for i in t))))/(N_FACES**n)
     return(rep)
 
 @functools.cache
-def all_possible_dices_outputs(n : int):
+def all_possible_dice_outputs(n : int):
     """Computes all possible dice outputs with n dice
 
-    :param n: Number of dices available.
+    :param n: Number of dice available.
     :type n: int
     """
     def generate_tuples(sum_value, tuple_length):
         # Générer tous les tuples possibles
         possible_tuples = itertools.product(range(sum_value+1), repeat=tuple_length)
         
-        # Filtrer les tuples dont la somme des éléments est égale à sum_value
+        # Filtrer les tuples dont la somme des éléments est égale à sum_value (ie le nombre de dés à lancer)
         valid_tuples = [t for t in possible_tuples if sum(t) == sum_value]
         
         return valid_tuples
 
-    return(generate_tuples(n, 6))
+    return(generate_tuples(n, N_FACES))
 
 def rewardfun(score : int):
     if score < 21:
@@ -81,18 +83,18 @@ def rewardfun(score : int):
         return(global_r[score - 21])
 
 @functools.cache
-def strategy(dice_results : tuple, previous_choices : int, nb_available_dices : int, score : int):
+def strategy(dice_results : tuple, previous_choices : int, nb_available_dice : int, score : int):
     """Computes the optimal strategy
     Idée:
     On peut surement améliorer en mémoisant (dans une fonction interne) sans dice result. 
     Car on choisit l'action a prendre sur l'espérance sur le lancé de dé. On peut donc mémoiser cette espérance pour ne pas à avoir a sommer à chaque fois
 
-    :param dice_results: Results of the dice. dice_results[i] is the number of dice drawing i. O is a worm.
+    :param dice_results: Results of the dice. dice_results[i] is the number of dice drawing i. 0 is a worm.
     :type dice_results: tuple
-    :param previous_choices: Tells if a choice have already been made
+    :param previous_choices: Tells if a choice has already been made
     :type previous_choices: int
-    :param nb_available_dices: Number of dices available
-    :type nb_available_dices: int
+    :param nb_available_dice: Number of dice available
+    :type nb_available_dice: int
     :param score: current_score
     :type score: int
     """
@@ -101,10 +103,13 @@ def strategy(dice_results : tuple, previous_choices : int, nb_available_dices : 
     possible_choices = [i for i in range(len(dice_results)) if dice_results[i] != 0 and ((previous_choices >> i) & 1) == 0]
     for choice_temp in possible_choices:
         new_choices = previous_choices | (1 << choice_temp)
-        new_score = score + choice_temp*dice_results[choice_temp]
-        new_nb_available_dices = nb_available_dices - dice_results[choice_temp]
-        reward_temp = sum(proba(dice_output, new_nb_available_dices) * strategy(dice_output, new_choices, new_nb_available_dices, new_score)[1]
-                          for dice_output in all_possible_dices_outputs(new_nb_available_dices)
+        dice_value = 5 if choice_temp == 0 else choice_temp
+        new_score = score + dice_value*dice_results[choice_temp]
+        new_nb_available_dice = nb_available_dice - dice_results[choice_temp]
+        reward_temp = sum(
+                            proba(dice_output, new_nb_available_dice) 
+                          * strategy(dice_output, new_choices, new_nb_available_dice, new_score)[1]
+                          for dice_output in all_possible_dice_outputs(new_nb_available_dice)
                           )
         if reward_temp > reward:
             reward = reward_temp
@@ -116,22 +121,22 @@ def strategy(dice_results : tuple, previous_choices : int, nb_available_dices : 
 if __name__ == "__main__":
     
     
-    initial_throw = dices2state((1, 3, 3, 3, 4, 4, 5, 0))
+    initial_throw = dice2state((1, 3, 3, 3, 4, 4, 5, 0))
     tic = time.time()
-    print(strategy(initial_throw, 0, 8, 0))
+    print(strategy(initial_throw, 0, N_DICE, 0))
     print(time.time() - tic)
     
-    initial_throw = dices2state((1, 3, 3, 3, 4, 5, 5, 0))
+    initial_throw = dice2state((1, 3, 3, 3, 4, 5, 5, 0))
     tic = time.time()
-    print(strategy(initial_throw, 0, 8, 0))
+    print(strategy(initial_throw, 0, N_DICE, 0))
     print(time.time() - tic)
     
-    initial_throw = dices2state((1, 3, 3, 3, 5, 5, 5, 0))
+    initial_throw = dice2state((1, 3, 3, 3, 5, 5, 5, 0))
     tic = time.time()
-    print(strategy(initial_throw, 0, 8, 0))
+    print(strategy(initial_throw, 0, N_DICE, 0))
     print(time.time() - tic)
     
-    initial_throw = dices2state((1, 3, 3, 5, 5, 5, 5, 0))
+    initial_throw = dice2state((1, 3, 3, 5, 5, 5, 5, 0))
     tic = time.time()
-    print(strategy(initial_throw, 0, 8, 0))
+    print(strategy(initial_throw, 0, N_DICE, 0))
     print(time.time() - tic)
