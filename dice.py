@@ -5,10 +5,13 @@ import math
 import itertools
 import time
 
-global_r = (1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4)
-global_c = 0
 N_DICE = 8
 N_FACES = 6
+DOMINO_MIN = 21
+DOMINO_MAX = 36
+
+global_c = 0
+global_r = [global_c for _ in range(DOMINO_MIN)]+[1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
 
 @functools.cache
 def fact(n: int):
@@ -19,10 +22,10 @@ def fact(n: int):
     """
     return(math.factorial(n))
 
-def draw_dice():
+def draw_dice(n = N_DICE):
     """Draws N dice and gives the result in ascending order
     """
-    dice = np.random.randint(0, N_FACES, N_DICE)
+    dice = np.random.randint(0, N_FACES, n)
     return(dice2state(dice))
 
 def dice2state(dice):
@@ -73,14 +76,10 @@ def all_possible_dice_outputs(n : int):
     return(generate_tuples(n, N_FACES))
 
 def rewardfun(score : int):
-    if score < 21:
-        return(global_c)
-    elif score > 36:
-        print(f"ERROR rewardfun {score}")
-        raise RuntimeError
-        return(0)
+    if score > DOMINO_MAX:
+        return(global_r[DOMINO_MAX])
     else:
-        return(global_r[score - 21])
+        return(global_r[score])
 
 @functools.cache
 def strategy(dice_results : tuple, previous_choices : int, nb_available_dice : int, score : int):
@@ -115,8 +114,6 @@ def strategy(dice_results : tuple, previous_choices : int, nb_available_dice : i
             reward = reward_temp
             choice = choice_temp
     return(choice, reward)
-    
-
 
 if __name__ == "__main__":
     
