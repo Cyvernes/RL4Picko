@@ -50,7 +50,7 @@ class Game:
             player_selection = self.play_grill_part(player_to_play, player_score)
 
             if player_selection == player_score:#stealing is possible
-                if player_to_wait.dominos != [] and player_selection == player_to_wait.dominos[-1]:
+                if player_to_wait.dominos and player_selection == player_to_wait.dominos[-1]:
                     self.playerA_dominos.append(self.playerB_dominos.pop(-1))
                     player_to_play, player_to_wait = player_to_wait, player_to_play
                     continue
@@ -60,8 +60,8 @@ class Game:
                 player_to_play.dominos.append(player_selection) 
                
             else:#The playing player has failed their turn
-                if len(player_to_play.dominos) > 0:
-                    lost_domino = -1
+                lost_domino = None
+                if player_to_play.dominos:
                     lost_domino = player_to_play.dominos.pop(-1)
 
                 for i in range(self.domino_max, self.domino_min-1, -1):
@@ -88,7 +88,7 @@ class Game:
     
 
 if __name__ == "__main__":
-    
+
     playerA = Player()
     playerB = Player()
     game = Game(playerA, playerB)
