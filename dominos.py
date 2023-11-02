@@ -1,4 +1,4 @@
-from dice import *
+from players import *
 
 def ab_strat(grill: list[bool], me: int, op: int):
 
