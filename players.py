@@ -31,6 +31,16 @@ class Player:
         return(rep)
     
     @functools.cache
+    def expectancy(self, choices: int, nb_available_dice: int, score : int) -> float:
+        return(sum(
+                                proba(dice_output, nb_available_dice) 
+                            * self.strategy(dice_output, choices, nb_available_dice, score)[1]
+                            for dice_output in all_possible_dice_outputs(nb_available_dice)
+                            )
+               )
+    
+    
+    @functools.cache
     def strategy(self, dice_results : tuple, previous_choices : int, nb_available_dice : int, score : int):
         """Computes the optimal strategy
         Idée:
@@ -54,11 +64,7 @@ class Player:
             dice_value = 5 if choice_temp == 0 else choice_temp
             new_score = score + dice_value*dice_results[choice_temp]
             new_nb_available_dice = nb_available_dice - dice_results[choice_temp]
-            reward_temp = sum(
-                                proba(dice_output, new_nb_available_dice) 
-                            * self.strategy(dice_output, new_choices, new_nb_available_dice, new_score)[1]
-                            for dice_output in all_possible_dice_outputs(new_nb_available_dice)
-                            )
+            reward_temp = self.expectancy(new_choices, new_nb_available_dice, new_score)
             if reward_temp > reward:
                 reward = reward_temp
                 choice = choice_temp
@@ -70,27 +76,23 @@ if __name__ == "__main__":
     
     initial_throw = dice2state((1, 3, 3, 3, 4, 4, 5, 0))
     tic = time.time()
-    print(player.play_dice(initial_throw, 0, 8, 0))
+    print(player.strategy(initial_throw, 0, 8, 0))
     print(time.time() - tic)
     
     initial_throw = dice2state((1, 3, 3, 3, 4, 5, 5, 0))
     tic = time.time()
-    print(player.play_dice(initial_throw, 0, 8, 0))
+    print(player.strategy(initial_throw, 0, 8, 0))
     print(time.time() - tic)
     
     initial_throw = dice2state((1, 3, 3, 3, 5, 5, 5, 0))
     tic = time.time()
-    print(player.play_dice(initial_throw, 0, 8, 0))
+    print(player.strategy(initial_throw, 0, 8, 0))
     print(time.time() - tic)
     
     initial_throw = dice2state((1, 3, 3, 5, 5, 5, 5, 0))
     tic = time.time()
-    print(player.play_dice(initial_throw, 0, 8, 0))
+    print(player.strategy(initial_throw, 0, 8, 0))
     print(time.time() - tic)
     
-    grill = [(k>=player.domino_min) for k in range(player.domino_max+1)]
-    print(grill)
-    for score in range(40):
-        print(player.play_grill(grill, score))
-    
+
     
