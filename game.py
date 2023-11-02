@@ -1,64 +1,96 @@
 from dominos import *
+from tools import *
+from players import *
 
 class Game:
 
-    def __init__(self) -> None:
-        self.grill = [(k>=DOMINO_MIN) for k in range(DOMINO_MAX+1)]
-        self.A = []
-        self.B = []
-        self.turnA = True
+    def __init__(self, playerA : Player, playerB : Player) -> None:
+        self.domino_min = 21
+        self.domino_max = 36
+        self.grill = [(k>=self.domino_min) for k in range(self.domino_max+1)]
+        self.playerA = playerA
+        self.playerB = playerB
+        self.N_dice = 8
+        self.r = [0]*self.domino_min + [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
 
     def __str__(self) -> str:
-        res = ''.join(["X" if dom else "." for dom in self.grill[DOMINO_MIN:]])
-        res += '   ' + str(sum(self.A)).ljust(4) + str(sum(self.B))
+        res = ''.join(["X" if dom else "." for dom in self.grill[self.domino_min:]])
+        res += '   ' + str(sum(self.playerA.dominos)).ljust(4) + str(sum(self.playerB.dominos))
         return res
 
     def over(self) -> bool:
-        for el in self.grill[DOMINO_MIN:]:
-            if el:
-                return False
-        return True
+        return(not np.any(self.grill))
+    
+    def play_dice_part(self, player : Player) -> int:
+        nb_available_dice = self.N_dice
+        score = 0
+        previous_choices = 0
+        
+        while 1:
+            dice_results = draw_dice(nb_available_dice)
+            player_choice = player.play_dice(dice_results, previous_choices, nb_available_dice, score)
+            if player_choice == -1:
+                return(score)
+            else:
+                nb_available_dice -= dice_results[player_choice]
+                score += (5 if player_choice == 0 else player_choice)*dice_results[player_choice]
+                previous_choices |= 1 << player_choice
+            
+    
+    def play_grill_part(self, player : Player, score : int) -> int:
+        player_selection = player.play_grill(self.grill, score)
+        return(player_selection)
+    
+    def play_a_game(self):
+        player_to_play, player_to_wait = self.playerA, self.playerB
+        
+        while not(self.over()):
+            print(self)
+            player_score = self.play_dice_part(player_to_play)
+            player_selection = self.play_grill_part(player_to_play, player_score)
+
+            if player_selection == player_score:#stealing is possible
+                if player_to_wait.dominos != [] and player_selection == player_to_wait.dominos[-1]:
+                    self.playerA_dominos.append(self.playerB_dominos.pop(-1))
+                    player_to_play, player_to_wait = player_to_wait, player_to_play
+                    continue
+            
+            if self.grill[player_selection] and player_selection != -1:#The playing player has chosen a domino
+                self.grill[player_selection] = False
+                player_to_play.dominos.append(player_selection) 
+               
+            else:#The playing player has failed their turn
+                if len(player_to_play.dominos) > 0:
+                    lost_domino = -1
+                    lost_domino = player_to_play.dominos.pop(-1)
+
+                for i in range(self.domino_max, self.domino_min-1, -1):
+                    if self.grill[i] and i != lost_domino:
+                        game.grill[i] = False
+                        break
+            
+            player_to_play, player_to_wait = player_to_wait, player_to_play 
+        
+        final_score_playerA = sum((self.r[domino]  for domino in self.playerA.dominos))
+        final_score_playerB = sum((self.r[domino]  for domino in self.playerB.dominos))
+        
+        rep = "DRAW!"
+        if final_score_playerA > final_score_playerB:
+            rep = "A wins"
+        elif final_score_playerB > final_score_playerA:
+            rep = "B wins"
+        
+        print(rep + "|| PlayerA dominos':", self.playerA.dominos, "| PlayerB dominos':", self.playerB.dominos)
+        
+          
+
+    
+    
 
 if __name__ == "__main__":
+    
+    playerA = Player()
+    playerB = Player()
+    game = Game(playerA, playerB)
+    game.play_a_game()
 
-    game = Game()
-
-    while not game.over():
-        print(game)
-
-        topA = game.A[-1] if game.A else 0
-        topB = game.B[-1] if game.B else 0
-        dom = ab_strat(game.grill, topA, topB) if game.turnA else ab_strat(game.grill, topB, topA)
-
-        # case where A returns nothing: try putting back last domino earned by A, and remove the best domino
-        if dom == 0:
-            try:
-                lost_dom = game.A.pop() if game.turnA else game.B.pop()
-                game.grill[lost_dom] = True
-            except IndexError:
-                pass
-            
-            for i in range(DOMINO_MAX,DOMINO_MIN-1, -1):
-                if game.grill[i]:
-                    game.grill[i] = False
-                    break
-        
-        # steal case
-        elif game.turnA and dom == topB:
-            game.A.append(game.B.pop())
-        elif (not game.turnA) and dom == topA:
-            game.B.append(game.A.pop())
-
-        # case where a domino is returned
-        elif DOMINO_MIN <= dom <= DOMINO_MAX:
-            game.grill[dom] = False
-            if game.turnA:
-                game.A.append(dom)
-            else:
-                game.B.append(dom)
-        
-        # error case
-        else:
-            raise IndexError
-        
-        game.turnA = not game.turnA
