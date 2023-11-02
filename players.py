@@ -4,8 +4,6 @@ from tools import *
 
 
 
-
-
 class Player:
     
     def __init__(self) -> None:
@@ -14,21 +12,48 @@ class Player:
         self.domino_min = 21
         self.domino_max = 36
         self.C = 0
-        self.r = [self.C]*self.domino_min + [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
+        self.r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
         self.dominos = []
 
 
     def rewardfun(self, score : int) -> int:
-        return(max(self.r[:min(len(self.r) - 1, score)]))
+        if score < self.domino_min:
+            return(self.C)
+        else:
+            return(max(self.r[:min(score - self.domino_min , self.domino_max - self.domino_min) + 1]))
 
     def play_dice(self, dice_results : tuple, previous_choices : int, nb_available_dice : int, score : int) -> int:
+        """Do the choice when dices are drawn
+
+        :param dice_results: _description_
+        :type dice_results: tuple
+        :param previous_choices: _description_
+        :type previous_choices: int
+        :param nb_available_dice: _description_
+        :type nb_available_dice: int
+        :param score: _description_
+        :type score: int
+        :return: _description_
+        :rtype: int
+        """
         return(self.strategy(dice_results, previous_choices, nb_available_dice, score)[0])
     
     def play_grill(self, grill, score : int) -> int:
-        values = [a*b for a,b in zip(grill[:score + 1], self.r[:score + 1])]
-        rep = np.argmax(values)
-        rep = rep if rep >= self.domino_min else -1
-        return(rep)
+        """Selects the domino according to the score and the grill
+
+        :param grill: _description_
+        :type grill: _type_
+        :param score: _description_
+        :type score: int
+        :return: _description_
+        :rtype: int
+        """
+        if score < self.domino_min:
+            return(-1)
+        values = [a*b for a,b in zip(grill[self.domino_min :min(score, self.domino_max) + 1], self.r[:score - self.domino_min + 1])]
+        domino = np.argmax(values) + self.domino_min
+        domino = domino if domino >= self.domino_min else -1
+        return(domino)
     
     @functools.cache
     def expectancy(self, choices: int, nb_available_dice: int, score : int) -> float:
@@ -43,10 +68,7 @@ class Player:
     @functools.cache
     def strategy(self, dice_results : tuple, previous_choices : int, nb_available_dice : int, score : int):
         """Computes the optimal strategy
-        Idée:
-        On peut surement améliorer en mémoisant (dans une fonction interne) sans dice result. 
-        Car on choisit l'action a prendre sur l'espérance sur le lancé de dé. On peut donc mémoiser cette espérance pour ne pas à avoir a sommer à chaque fois
-
+        
         :param dice_results: Results of the dice. dice_results[i] is the number of dice drawing i. 0 is a worm.
         :type dice_results: tuple
         :param previous_choices: Tells if a choice has already been made
