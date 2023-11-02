@@ -1,6 +1,6 @@
 from dominos import *
 
-class State:
+class Game:
 
     def __init__(self) -> None:
         self.grill = [(k>=DOMINO_MIN) for k in range(DOMINO_MAX+1)]
@@ -21,44 +21,44 @@ class State:
 
 if __name__ == "__main__":
 
-    state = State()
+    game = Game()
 
-    while not state.over():
-        print(state)
+    while not game.over():
+        print(game)
 
-        topA = state.A[-1] if state.A else 0
-        topB = state.B[-1] if state.B else 0
-        dom = ab_strat(state.grill, topA, topB) if state.turnA else ab_strat(state.grill, topB, topA)
+        topA = game.A[-1] if game.A else 0
+        topB = game.B[-1] if game.B else 0
+        dom = ab_strat(game.grill, topA, topB) if game.turnA else ab_strat(game.grill, topB, topA)
 
         # case where A returns nothing: try putting back last domino earned by A, and remove the best domino
         if dom == 0:
             try:
-                lost_dom = state.A.pop() if state.turnA else state.B.pop()
-                state.grill[lost_dom] = True
+                lost_dom = game.A.pop() if game.turnA else game.B.pop()
+                game.grill[lost_dom] = True
             except IndexError:
                 pass
             
             for i in range(DOMINO_MAX,DOMINO_MIN-1, -1):
-                if state.grill[i]:
-                    state.grill[i] = False
+                if game.grill[i]:
+                    game.grill[i] = False
                     break
         
         # steal case
-        elif state.turnA and dom == topB:
-            state.A.append(state.B.pop())
-        elif (not state.turnA) and dom == topA:
-            state.B.append(state.A.pop())
+        elif game.turnA and dom == topB:
+            game.A.append(game.B.pop())
+        elif (not game.turnA) and dom == topA:
+            game.B.append(game.A.pop())
 
         # case where a domino is returned
         elif DOMINO_MIN <= dom <= DOMINO_MAX:
-            state.grill[dom] = False
-            if state.turnA:
-                state.A.append(dom)
+            game.grill[dom] = False
+            if game.turnA:
+                game.A.append(dom)
             else:
-                state.B.append(dom)
+                game.B.append(dom)
         
         # error case
         else:
             raise IndexError
         
-        state.turnA = not state.turnA
+        game.turnA = not game.turnA
