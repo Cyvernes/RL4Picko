@@ -42,34 +42,35 @@ class Game:
         return(player_selection)
     
     def play_a_game(self):
-        player_to_play, player_to_wait = self.playerA, self.playerB
+        playing_player, waiting_player = self.playerA, self.playerB
         
         while not(self.over()):
             print(self)
-            player_score = self.play_dice_part(player_to_play)
-            player_selection = self.play_grill_part(player_to_play, player_score)
+            player_score = self.play_dice_part(playing_player)
+            player_selection = self.play_grill_part(playing_player, player_score)
 
             if player_selection == player_score:#stealing is possible
-                if player_to_wait.dominos != [] and player_selection == player_to_wait.dominos[-1]:
-                    self.playerA_dominos.append(self.playerB_dominos.pop(-1))
-                    player_to_play, player_to_wait = player_to_wait, player_to_play
+                if waiting_player.dominos and player_selection == waiting_player.dominos[-1]:
+                    playing_player.dominos.append(waiting_player.dominos.pop(-1))
+                    #new turn
+                    playing_player, waiting_player = waiting_player, playing_player
                     continue
             
             if self.grill[player_selection] and player_selection != -1:#The playing player has chosen a domino
                 self.grill[player_selection] = False
-                player_to_play.dominos.append(player_selection) 
+                playing_player.dominos.append(player_selection) 
                
             else:#The playing player has failed their turn
-                if len(player_to_play.dominos) > 0:
-                    lost_domino = -1
-                    lost_domino = player_to_play.dominos.pop(-1)
+                lost_domino = None
+                if playing_player.dominos:
+                    lost_domino = playing_player.dominos.pop(-1)
 
                 for i in range(self.domino_max, self.domino_min-1, -1):
                     if self.grill[i] and i != lost_domino:
                         game.grill[i] = False
                         break
-            
-            player_to_play, player_to_wait = player_to_wait, player_to_play 
+            #new turn
+            playing_player, waiting_player = waiting_player, playing_player 
         
         final_score_playerA = sum((self.r[domino]  for domino in self.playerA.dominos))
         final_score_playerB = sum((self.r[domino]  for domino in self.playerB.dominos))
@@ -88,7 +89,7 @@ class Game:
     
 
 if __name__ == "__main__":
-    
+
     playerA = Player()
     playerB = Player()
     game = Game(playerA, playerB)
