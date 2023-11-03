@@ -1,4 +1,3 @@
-from dominos import *
 from tools import *
 from players import *
 
@@ -7,14 +6,14 @@ class Game:
     def __init__(self, playerA : Player, playerB : Player) -> None:
         self.domino_min = 21
         self.domino_max = 36
-        self.grill = [(k>=self.domino_min) for k in range(self.domino_max+1)]
+        self.grill = [True for k in range(self.domino_max-self.domino_min+1)]
         self.playerA = playerA
         self.playerB = playerB
         self.N_dice = 8
-        self.r = [0]*self.domino_min + [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
+        self.r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
 
     def __str__(self) -> str:
-        res = ''.join(["X" if dom else "." for dom in self.grill[self.domino_min:]])
+        res = ''.join(["X" if dom else "." for dom in self.grill])
         res += '   ' + str(sum(self.playerA.dominos)).ljust(4) + str(sum(self.playerB.dominos))
         return res
 
@@ -46,6 +45,8 @@ class Game:
         
         while not(self.over()):
             print(self)
+            top_domino_waiting_p = waiting_player.dominos[-1] if waiting_player.dominos else 0
+            playing_player.init_turn(self.grill,self.r,top_domino_waiting_p)
             player_score = self.play_dice_part(playing_player)
             player_selection = self.play_grill_part(playing_player, player_score)
 
@@ -56,8 +57,8 @@ class Game:
                     playing_player, waiting_player = waiting_player, playing_player
                     continue
             
-            if self.grill[player_selection] and player_selection != -1:#The playing player has chosen a domino
-                self.grill[player_selection] = False
+            if player_selection != -1 and self.grill[player_selection-self.domino_min]:#The playing player has chosen a domino
+                self.grill[player_selection-self.domino_min] = False
                 playing_player.dominos.append(player_selection) 
                
             else:#The playing player has failed their turn
@@ -66,14 +67,14 @@ class Game:
                     lost_domino = playing_player.dominos.pop(-1)
 
                 for i in range(self.domino_max, self.domino_min-1, -1):
-                    if self.grill[i] and i != lost_domino:
-                        game.grill[i] = False
+                    if self.grill[i-self.domino_min] and i != lost_domino:
+                        game.grill[i-self.domino_min] = False
                         break
             #new turn
             playing_player, waiting_player = waiting_player, playing_player 
         
-        final_score_playerA = sum((self.r[domino]  for domino in self.playerA.dominos))
-        final_score_playerB = sum((self.r[domino]  for domino in self.playerB.dominos))
+        final_score_playerA = sum((self.r[domino-self.domino_min]  for domino in self.playerA.dominos))
+        final_score_playerB = sum((self.r[domino-self.domino_min]  for domino in self.playerB.dominos))
         
         rep = "DRAW!"
         if final_score_playerA > final_score_playerB:
@@ -90,8 +91,8 @@ class Game:
 
 if __name__ == "__main__":
 
-    playerA = Player()
-    playerB = Player()
+    playerA = Player(1,1)
+    playerB = Player(1,1)
     game = Game(playerA, playerB)
     game.play_a_game()
 

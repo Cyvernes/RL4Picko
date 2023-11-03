@@ -6,7 +6,7 @@ from tools import *
 
 class Player:
     
-    def __init__(self) -> None:
+    def __init__(self, alpha: int, beta:int) -> None:
         self.N_dice = 8
         self.N_faces = 6
         self.domino_min = 21
@@ -14,13 +14,54 @@ class Player:
         self.C = 0
         self.r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
         self.dominos = []
+        self.alpha = alpha
+        self.beta = beta
 
+    def set_C(self, new_C: int):
+        self.expectancy.cache_clear()
+        self.strategy.cache_clear()
+        self.C = new_C
+
+    def set_r(self, new_r: list[int]):
+        self.expectancy.cache_clear()
+        self.strategy.cache_clear()
+        self.r = new_r.copy()
 
     def rewardfun(self, score : int) -> int:
         if score < self.domino_min:
             return(self.C)
         else:
             return(max(self.r[:min(score - self.domino_min , self.domino_max - self.domino_min) + 1]))
+
+    def init_turn(self, grill: list[bool], r: list[int], top_domino_adv: int):
+        """Initialises self.C and self.r according to game data
+
+        :param grill: game grill
+        :type grill: list[bool]
+        :param r: dominos rewards
+        :type r: list[int]
+        :param top_domino_adv: domino in the top of the adversary's stack
+        :type top_domino_adv: int
+        """
+
+        # init C
+        if self.dominos:
+            top_domino_me = self.dominos[-1]
+            self.set_C(r[top_domino_me-self.domino_min])
+        else:
+            self.set_C(0)
+
+        # init r
+        new_r = self.r.copy()
+        for i,available in enumerate(grill):
+            if not available:
+                new_r[i] = self.C
+        if top_domino_adv > 0:
+            steal_idx = top_domino_adv-self.domino_min
+            new_r[steal_idx] = 2*r[steal_idx]*self.beta
+        self.set_r(new_r)
+
+
 
     def play_dice(self, dice_results : tuple, previous_choices : int, nb_available_dice : int, score : int) -> int:
         """Do the choice when dices are drawn
@@ -50,9 +91,8 @@ class Player:
         """
         if score < self.domino_min:
             return(-1)
-        values = [a*b for a,b in zip(grill[self.domino_min :min(score, self.domino_max) + 1], self.r[:score - self.domino_min + 1])]
-        domino = np.argmax(values) + self.domino_min
-        domino = domino if domino >= self.domino_min else -1
+        domino = np.argmax(self.r[:score-self.domino_min+1]) + self.domino_min
+        domino = domino if self.r[domino-self.domino_min] > 0 else -1
         return(domino)
     
     @functools.cache
