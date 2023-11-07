@@ -14,20 +14,13 @@ class Player:
         self.domino_max = 36
         self.C = 0
         self.r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
-        self.adv = (0,0)
         self.dominos = []
-        self.alpha = 1
-        self.beta = 1
 
     def reinit(self) -> None:
         self.C = 0
         self.r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
         self.adv = (0,0)
         self.dominos = []
-
-    def set_ab(self, alpha: int, beta:int) -> None:
-        self.alpha = alpha
-        self.beta = beta
 
     def set_C(self, new_C: int):
         logging.debug("cache clear")
@@ -44,10 +37,7 @@ class Player:
     def rewardfun(self, score : int) -> int:
         if score < self.domino_min:
             return(-self.C)
-        if score == self.adv[0]:
-            return self.adv[1]
-        else:
-            return(max(self.r[:min(score - self.domino_min , self.domino_max - self.domino_min) + 1]))
+        return(max(self.r[:min(score - self.domino_min , self.domino_max - self.domino_min) + 1]))
 
     def init_turn(self, grill: list[bool], r: list[int], top_domino_adv: int):
         """Initialises self.C and self.r according to game data
@@ -59,22 +49,6 @@ class Player:
         :param top_domino_adv: domino in the top of the adversary's stack
         :type top_domino_adv: int
         """
-
-        # init C
-        if self.dominos:
-            top_domino_me = self.dominos[-1]
-            self.set_C(r[top_domino_me-self.domino_min])
-        else:
-            self.set_C(0)
-
-        # init adv
-        if top_domino_adv > 0:
-            r_adv = r[top_domino_adv-self.domino_min]
-            self.adv = (top_domino_adv, 2*r_adv*self.beta)
-        else:
-            self.adv = (0,0)
-
-        # init r
         new_r = self.r.copy()
         for i,available in enumerate(grill):
             if not available:
@@ -113,8 +87,6 @@ class Player:
         """
         if score < self.domino_min:
             return(-1)
-        if score == self.adv[0]:
-            return score
         domino = np.argmax(self.r[:score-self.domino_min+1]) + self.domino_min
         domino = domino if self.r[domino-self.domino_min] > 0 else -1
         return(domino)
@@ -157,6 +129,45 @@ class Player:
                 reward = reward_temp
                 choice = choice_temp
         return(choice, reward)
+
+class PlayerAB(Player):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.alpha = 1
+        self.beta = 1
+        self.adv = (0,0)
+    
+    def set_ab(self, alpha: int, beta:int) -> None:
+        self.alpha = alpha
+        self.beta = beta
+    
+    def rewardfun(self, score : int) -> int:
+        if score != 0 and score == self.adv[0]:
+            return self.adv[1]
+        return super().rewardfun(score)
+
+    def init_turn(self, grill: list[bool], r: list[int], top_domino_adv: int):
+        # init C
+        if self.dominos:
+            top_domino_me = self.dominos[-1]
+            self.set_C(self.alpha*r[top_domino_me-self.domino_min])
+        else:
+            self.set_C(0)
+
+        # init adv
+        if top_domino_adv > 0:
+            r_adv = r[top_domino_adv-self.domino_min]
+            self.adv = (top_domino_adv, 2*r_adv*self.beta)
+        else:
+            self.adv = (0,0)
+
+        super().init_turn(grill, r, top_domino_adv)
+    
+    def play_grill(self, grill, score : int) -> int:
+        if score != 0 and score == self.adv[0]:
+            return score
+        return super().play_grill(grill, score)
 
 if __name__ == "__main__":
     

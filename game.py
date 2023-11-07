@@ -118,10 +118,6 @@ class Game:
             
             print(rep + "|| PlayerA dominos':", self.playerA.dominos, "| PlayerB dominos':", self.playerB.dominos)
         
-          
-
-    
-    
 
 if __name__ == "__main__":
 
@@ -132,10 +128,8 @@ if __name__ == "__main__":
         pass
     logging.basicConfig(filename=log_path, level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-    playerA = Player()
-    playerA.set_ab(1,0.1)
-    playerB = Player()
-    playerB.set_ab(1,0.1)
+    playerA = PlayerAB()
+    playerB = PlayerAB()
     game = Game(playerA, playerB)
     score_A, score_B = 0,0
     for _ in range(10):
