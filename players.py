@@ -93,6 +93,17 @@ class Player:
     
     @functools.cache
     def expectancy(self, choices: int, nb_available_dice: int, score : int) -> float:
+        """Returns the expected reward with the given situation
+
+        :param choices: bit array of chosen dice
+        :type choices: int
+        :param nb_available_dice: number of available dice
+        :type nb_available_dice: int
+        :param score: score already achieved
+        :type score: int
+        :return: expected reward
+        :rtype: float
+        """
         return(sum(
                                 proba(dice_output, nb_available_dice) 
                             * self.strategy(dice_output, choices, nb_available_dice, score)[1]

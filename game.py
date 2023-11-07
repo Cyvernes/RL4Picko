@@ -129,6 +129,7 @@ if __name__ == "__main__":
     logging.basicConfig(filename=log_path, level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     playerA = PlayerAB()
+    playerA.set_ab(1,1)
     playerB = PlayerAB()
     game = Game(playerA, playerB)
     score_A, score_B = 0,0
