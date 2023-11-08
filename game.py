@@ -23,9 +23,9 @@ class Game:
 
     def score(self, player):
         if player == 'A':
-            return sum((self.r[domino-self.domino_min]  for domino in self.playerA.dominos))
+            return sum((self.r[domino-self.domino_min] for domino in self.playerA.dominos))
         if player == 'B':
-            return sum((self.r[domino-self.domino_min]  for domino in self.playerB.dominos))
+            return sum((self.r[domino-self.domino_min] for domino in self.playerB.dominos))
         return ValueError
 
     def __str__(self) -> str:
@@ -62,6 +62,11 @@ class Game:
         return(player_selection)
     
     def play_game(self, display=True):
+        """_summary_
+
+        :param display: _description_, defaults to True
+        :type display: bool, optional
+        """
 
         playing_player, waiting_player = self.playerA, self.playerB
         
@@ -126,7 +131,7 @@ if __name__ == "__main__":
         os.remove(log_path)
     except OSError:
         pass
-    logging.basicConfig(filename=log_path, level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(filename=log_path, level=logging.NOTSET, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     playerA = PlayerAB()
     playerA.set_ab(1,1)

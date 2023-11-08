@@ -19,7 +19,6 @@ class Player:
     def reinit(self) -> None:
         self.C = 0
         self.r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
-        self.adv = (0,0)
         self.dominos = []
 
     def set_C(self, new_C: int):
@@ -54,7 +53,7 @@ class Player:
             if not available:
                 new_r[i] = -self.C
         self.set_r(new_r)
-
+        logging.debug(f"Reward vector at this turn: {self.r}")
 
 
     def play_dice(self, dice_results : tuple, previous_choices : int, nb_available_dice : int, score : int) -> int:
@@ -105,10 +104,10 @@ class Player:
         :rtype: float
         """
         return(sum(
-                                proba(dice_output, nb_available_dice) 
-                            * self.strategy(dice_output, choices, nb_available_dice, score)[1]
-                            for dice_output in all_possible_dice_outputs(nb_available_dice)
-                            )
+                        proba(dice_output, nb_available_dice) 
+                        * self.strategy(dice_output, choices, nb_available_dice, score)[1]
+                    for dice_output in all_possible_dice_outputs(nb_available_dice)
+                    )
                )
     
     
@@ -147,14 +146,14 @@ class PlayerAB(Player):
         super().__init__()
         self.alpha = 1
         self.beta = 1
-        self.adv = (0,0)
+        self.adv = (0,0) #(last domino of adversary, reward we get if the player steals it)
     
     def set_ab(self, alpha: int, beta:int) -> None:
         self.alpha = alpha
         self.beta = beta
     
     def rewardfun(self, score : int) -> int:
-        if score != 0 and score == self.adv[0]:
+        if score and score == self.adv[0]:
             return self.adv[1]
         return super().rewardfun(score)
 
@@ -176,10 +175,21 @@ class PlayerAB(Player):
         super().init_turn(grill, r, top_domino_adv)
     
     def play_grill(self, grill, score : int) -> int:
-        if score != 0 and score == self.adv[0]:
+        if score and score == self.adv[0]:#PLayerAB always steals when possible
             return score
         return super().play_grill(grill, score)
 
+
+
+class Player_select_Tile_equal_score(Player):
+    def __init__(self) -> None:
+        super().__init__()
+        
+    def rewardfun(self, score : int) -> int:
+        if score < self.domino_min or score > self.domino_max:
+            return(-self.C)
+        return(self.r[score - self.domino_min])
+    
 if __name__ == "__main__":
     
     player = Player()
@@ -203,3 +213,4 @@ if __name__ == "__main__":
     tic = time.time()
     print(player.strategy(initial_throw, 0, 8, 0))
     print(time.time() - tic)
+    

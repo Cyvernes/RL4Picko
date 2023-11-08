@@ -52,7 +52,7 @@ def all_possible_dice_outputs(n : int):
     return(generate_tuples(n, N_FACES))
 
 def draw_dice(n = 8):
-    """Draws N dice and gives the result in ascending order
+    """Draws N dice and gives the result in state form
     """
     dice = np.random.randint(0, N_FACES, n)
     return(dice2state(dice))
@@ -63,7 +63,7 @@ def dice2state(dice):
     :param dice: Results of the dice
     :type dice: iterable(int)
     """
-    temp = [0 for i in range(N_FACES)]
+    temp = [0]*N_FACES
     for d in dice:
         temp[d] +=1
     rep = tuple(temp)
