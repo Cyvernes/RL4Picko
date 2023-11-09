@@ -7,33 +7,34 @@ from typing import Tuple
 
 class Player:
     
-    def __init__(self) -> None:
-        self.N_dice = 8
+    def __init__(self, N_dice = 8, domino_min = 21, domino_max = 36, r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]) -> None:
+        self.N_dice = N_dice
         self.N_faces = 6
-        self.domino_min = 21
-        self.domino_max = 36
+        self.domino_min = domino_min
+        self.domino_max = domino_max
         self.C = 0
-        self.r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
+        self.r = r
+        self.basic_r = r
         self.dominos = []
         self.clear_cache = True
 
     def reinit(self) -> None:
         self.C = 0
-        self.r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
+        self.r = self.basic_r
         self.dominos = []
 
     def set_C(self, new_C: int):
         if self.clear_cache:
             logging.debug("cache clear")
             self.expectancy.cache_clear()
-            self.strategy.cache_clear()
+            #self.strategy.cache_clear()
         self.C = new_C
 
     def set_r(self, new_r: list[int]):
         if self.clear_cache:
             logging.debug("cache clear")
             self.expectancy.cache_clear()
-            self.strategy.cache_clear()
+            #self.strategy.cache_clear()
         self.r = new_r.copy()
 
 
@@ -118,7 +119,7 @@ class Player:
                )
     
     
-    @functools.cache
+    #@functools.cache
     def strategy(self, dice_results : tuple, previous_choices : int, nb_available_dice : int, score : int) -> Tuple[Tuple[int, int], int]:
         """Computes the optimal strategy using Bellman equation.
 
@@ -165,8 +166,8 @@ class Player:
 
 class PlayerAB(Player):
 
-    def __init__(self, clear_cache = True) -> None:
-        super().__init__()
+    def __init__(self, clear_cache = True, N_dice = 8, domino_min = 21, domino_max = 36, r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]) -> None:
+        super().__init__(N_dice, domino_min, domino_max , r)
         self.alpha = 1
         self.beta = 1
         self.adv = (0,0) #(last domino of adversary, reward we get if the player steals it)
