@@ -9,14 +9,14 @@ class Game:
     def __init__(self, playerA : Player, playerB : Player) -> None:
         self.domino_min = 21
         self.domino_max = 36
-        self.grill = [True for k in range(self.domino_max-self.domino_min+1)]
+        self.grill = (self.domino_max-self.domino_min+1)
         self.playerA = playerA
         self.playerB = playerB
         self.N_dice = 8
         self.r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
 
     def reinit(self):
-        self.grill = [True for k in range(self.domino_max-self.domino_min+1)]
+        self.grill = [True]* (self.domino_max-self.domino_min+1)
         self.playerA.reinit()
         self.playerB.reinit()
 
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     playerB = PlayerAB()
     game = Game(playerA, playerB)
     score_A, score_B = 0,0
-    for _ in range(10):
+    for _ in range(1):
         game.reinit()
         game.play_game(display=True)
         score_A += game.score("A")
