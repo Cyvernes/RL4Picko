@@ -4,11 +4,11 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-N_PLAYERS = 40
+N_PLAYERS = 20
 N_EPOCH = 50
-N_GAME_SIMU = 10
+N_GAME_SIMU = 50
 
-SURVIVAL_RATE = 0.4
+SURVIVAL_RATE = 0.2
 
 N_DICE = 4
 DOMINO_MIN = 11
@@ -23,7 +23,8 @@ if __name__ == "__main__":
     N_survival = math.floor(SURVIVAL_RATE*N_PLAYERS) - 1
     player11 = PlayerAB(N_dice=N_DICE, domino_min=DOMINO_MIN,domino_max=DOMINO_MAX,r=R)
     player11.set_ab(1, 1)
-    
+    bestab = (1, 1)
+    best_eval =  0
     #init the population
     population = [PlayerAB(N_dice=N_DICE, domino_min=DOMINO_MIN,domino_max=DOMINO_MAX,r=R) for i in range(N_PLAYERS)]
     for i in range(N_PLAYERS):
@@ -44,18 +45,23 @@ if __name__ == "__main__":
                 average_score += game.score('A')
             average_score = average_score / N_GAME_SIMU
             evals[player_idx] = average_score
-            
+        
+        if evals[0] > best_eval:
+            best_eval = evals[0]
+            bestab = (population[0].alpha, population[0].beta)
         # Selection and reproduction
         sorting_list = sorted(zip(evals, population), key=lambda x: x[0], reverse=True)
         population = [x for _, x in sorting_list]
         evals = [x for x, _ in sorting_list]
         babies_idx = list(range(N_survival, N_PLAYERS))
-        for i,idx in enumerate(babies_idx):
+        for i,idx in enumerate(babies_idx[:-2]):
             parent_idx = i % N_survival
             a = population[parent_idx].alpha
             b = population[parent_idx].beta
             population[idx].set_ab(a, b)
         
+        population[-1].set_ab(bestab[0], bestab[1])
+        print(f"Best Alpha, Beta: {bestab}")
         
         percentiles_evol[0].append(min(evals))
         percentiles_evol[-1].append(max(evals))
@@ -63,10 +69,10 @@ if __name__ == "__main__":
             percentiles_evol[i+1].append(np.percentile(evals, percent))
                
         # mutation
-        for player in population:
+        for player in population[:-2]:
             a = player.alpha
             b = player.beta
-            da, db = np.random.uniform(-0.05, 0.05), np.random.uniform(-0.05, 0.05)
+            da, db = np.random.uniform(-0.1, 0.1), np.random.uniform(-0.1, 0.1)
             a = max(0,min(2, a + da))
             b = max(0,min(2, b + db))
             player.set_ab(a, b)
