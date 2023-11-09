@@ -61,6 +61,41 @@ class Game:
         player_selection = player.play_grill(self.grill, score)
         return(player_selection)
     
+    def play_turn(self, playing_player: Player, waiting_player:Player) -> int:
+        playing_player.init_turn(self.grill,self.r,waiting_player.dominos)
+        player_score = self.play_dice_part(playing_player)
+        player_selection = self.play_grill_part(playing_player, player_score)
+
+        if player_selection == player_score:#stealing is possible
+            if waiting_player.dominos and player_selection == waiting_player.dominos[-1]:
+                logging.info(f"steals {player_selection}")
+                playing_player.dominos.append(waiting_player.dominos.pop(-1))
+                #new turn
+                playing_player, waiting_player = waiting_player, playing_player
+                return 2*self.r[player_selection-self.domino_min]
+        
+        if player_selection != -1 and self.grill[player_selection-self.domino_min]:#The playing player has chosen a domino
+            logging.info(f"takes {player_selection}")
+            self.grill[player_selection-self.domino_min] = False
+            playing_player.dominos.append(player_selection) 
+            return self.r[player_selection-self.domino_min]
+            
+        else:#The playing player has failed their turn
+            lost_domino = None
+            res = 0
+            if playing_player.dominos:
+                lost_domino = playing_player.dominos.pop(-1)
+                logging.info(f"looses domino {lost_domino}")
+                res = -self.r[lost_domino-self.domino_min]
+            else:
+                logging.info("looses turn")
+
+            for i in range(self.domino_max, self.domino_min-1, -1):
+                if self.grill[i-self.domino_min] and i != lost_domino:
+                    self.grill[i-self.domino_min] = False
+                    return res
+            return res
+
     def play_game(self, display=True):
         """_summary_
 
@@ -77,38 +112,8 @@ class Game:
                 logging.info("A plays")
             else:
                 logging.info("B plays")
-
-            top_domino_waiting_p = waiting_player.dominos[-1] if waiting_player.dominos else 0
-            playing_player.init_turn(self.grill,self.r,top_domino_waiting_p)
-            player_score = self.play_dice_part(playing_player)
-            player_selection = self.play_grill_part(playing_player, player_score)
-
-            if player_selection == player_score:#stealing is possible
-                if waiting_player.dominos and player_selection == waiting_player.dominos[-1]:
-                    logging.info(f"steals {player_selection}")
-                    playing_player.dominos.append(waiting_player.dominos.pop(-1))
-                    #new turn
-                    playing_player, waiting_player = waiting_player, playing_player
-                    continue
             
-            if player_selection != -1 and self.grill[player_selection-self.domino_min]:#The playing player has chosen a domino
-                logging.info(f"takes {player_selection}")
-                self.grill[player_selection-self.domino_min] = False
-                playing_player.dominos.append(player_selection) 
-               
-            else:#The playing player has failed their turn
-                lost_domino = None
-                if playing_player.dominos:
-                    lost_domino = playing_player.dominos.pop(-1)
-                    logging.info(f"looses domino {lost_domino}")
-                else:
-                    logging.info("looses turn")
-
-                for i in range(self.domino_max, self.domino_min-1, -1):
-                    if self.grill[i-self.domino_min] and i != lost_domino:
-                        game.grill[i-self.domino_min] = False
-                        break
-            #new turn
+            self.play_turn(playing_player, waiting_player)
             playing_player, waiting_player = waiting_player, playing_player 
 
         if display:
@@ -134,11 +139,12 @@ if __name__ == "__main__":
     logging.basicConfig(filename=log_path, level=logging.NOTSET, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     playerA = PlayerAB()
-    playerA.set_ab(1,1)
+    playerA.set_ab(1,100)
     playerB = PlayerAB()
+    playerA.set_ab(1,100)
     game = Game(playerA, playerB)
     score_A, score_B = 0,0
-    for _ in range(10):
+    for _ in range(20):
         game.reinit()
         game.play_game(display=True)
         score_A += game.score("A")

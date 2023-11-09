@@ -38,7 +38,7 @@ class Player:
             return(-self.C)
         return(max(self.r[:min(score - self.domino_min , self.domino_max - self.domino_min) + 1]))
 
-    def init_turn(self, grill: list[bool], r: list[int], top_domino_adv: int):
+    def init_turn(self, grill: list[bool], r: list[int], dominos_adv: list[int]):
         """Initialises self.C and self.r according to game data
 
         :param grill: game grill
@@ -157,7 +157,7 @@ class PlayerAB(Player):
             return self.adv[1]
         return super().rewardfun(score)
 
-    def init_turn(self, grill: list[bool], r: list[int], top_domino_adv: int):
+    def init_turn(self, grill: list[bool], r: list[int], dominos_adv: list[int]):
         # init C
         if self.dominos:
             top_domino_me = self.dominos[-1]
@@ -166,13 +166,14 @@ class PlayerAB(Player):
             self.set_C(0)
 
         # init adv
-        if top_domino_adv > 0:
+        if dominos_adv:
+            top_domino_adv = dominos_adv[-1]
             r_adv = r[top_domino_adv-self.domino_min]
             self.adv = (top_domino_adv, 2*r_adv*self.beta)
         else:
             self.adv = (0,0)
 
-        super().init_turn(grill, r, top_domino_adv)
+        super().init_turn(grill, r, dominos_adv)
     
     def play_grill(self, grill, score : int) -> int:
         if score and score == self.adv[0]:#PLayerAB always steals when possible
