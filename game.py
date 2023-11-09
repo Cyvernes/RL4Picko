@@ -116,7 +116,7 @@ class Game:
         while not(self.over()):
             if display:
                 print(self)
-            if playing_player == playerA:
+            if playing_player == self.playerA:
                 logging.info("A plays")
             else:
                 logging.info("B plays")
@@ -137,6 +137,48 @@ class Game:
             print(rep + "|| PlayerA dominos':", self.playerA.dominos, "| PlayerB dominos':", self.playerB.dominos)
         
 
+class GD:
+
+    def __init__(self, n_epochs, n_batchs, h = 0.01, lr = 0.1) -> None:
+        self.n_epochs = n_epochs
+        self.n_batchs = n_batchs
+        self.h = h
+        self.lr = lr
+        
+        self.epoch = 1
+        self.alpha = 1
+        self.beta = 1
+
+        self.alphas = [1]
+        self.betas = [1]
+
+        self.playerA = PlayerAB()
+        self.playerB = PlayerAB()
+        self.playerB.set_ab(1,1)
+        self.game = Game(self.playerA, self.playerB)
+    
+    def simu(self, a, b) -> float:
+        self.playerA.set_ab(a, b)
+        res = 0
+        for batch in range(self.n_batchs):
+            self.game.reinit()
+            self.game.play_game(display=False)
+            res -= self.game.score("A") - self.game.score("B") # descent so negative
+        return res/self.n_batchs
+
+    def gradient_descent(self):
+        for epoch in range(self.n_epochs):
+
+            fab = self.simu(self.alpha, self.beta)
+            fahb = self.simu(self.alpha + self.h, self.beta)
+            fabh = self.simu(self.alpha, self.beta + self.h)
+
+            self.alpha -= (fahb - fab) * (self.lr/self.epoch)
+            self.beta -= (fabh - fab) * (self.lr/self.epoch)
+
+            self.alphas.append(self.alpha)
+            self.betas.append(self.betas)
+
 if __name__ == "__main__":
 
     log_path = 'game.log'
@@ -146,17 +188,7 @@ if __name__ == "__main__":
         pass
     logging.basicConfig(filename=log_path, level=logging.NOTSET, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-    playerA = PlayerAB()
-    playerA.set_ab(1,100)
-    playerB = PlayerAB()
-    playerA.set_ab(1,100)
-    game = Game(playerA, playerB)
-    score_A, score_B = 0,0
-    for _ in range(1):
-        game.reinit()
-        game.play_game(display=True)
-        score_A += game.score("A")
-        score_B += game.score("B")
-    print(f"Final scores: A = {score_A}, B = {score_B}")
+    gd = GD(10, 3)
+    gd.gradient_descent()
 
     logging.shutdown()
