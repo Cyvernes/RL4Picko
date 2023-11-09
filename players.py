@@ -124,21 +124,36 @@ class Player:
         :param score: current_score
         :type score: int
         """
-        # reward init with score if a picko was stashed o/w -C
-        reward = self.rewardfun(score) if previous_choices % 2 == 1 else -self.C
+        if previous_choices == 63:# All dices have already been selected
+            reward = self.rewardfun(score)
+            return((-1, reward))
+        elif not nb_available_dice: # If no dice are left
+            reward = self.rewardfun(score) if previous_choices % 2 == 1 else -self.C
+            return((-1, reward))
+        else:#Test all possible choices
+            possible_choices = [i for i, dr in enumerate(dice_results) if dr and not ((previous_choices >> i) & 1)]
+            if not possible_choices:#the round is failed
+                return((None, -self.C))
+            # select the choice that have the best expectancy
 
-        choice = -1
-        possible_choices = [i for i in range(len(dice_results)) if dice_results[i] != 0 and ((previous_choices >> i) & 1) == 0]
-        for choice_temp in possible_choices:
-            new_choices = previous_choices | (1 << choice_temp)
-            dice_value = 5 if choice_temp == 0 else choice_temp
-            new_score = score + dice_value*dice_results[choice_temp]
-            new_nb_available_dice = nb_available_dice - dice_results[choice_temp]
-            reward_temp = self.expectancy(new_choices, new_nb_available_dice, new_score)
-            if reward_temp > reward:
-                reward = reward_temp
-                choice = choice_temp
-        return(choice, reward)
+            #choice is stopping
+            reward = self.rewardfun(score) if previous_choices % 2 == 1 else -self.C
+            choice = -1
+            
+            for choice_temp in possible_choices: # all other possible choices
+                #Compute previous_choices, score and nb_available_dice for the potential choice
+                new_choices = previous_choices | (1 << choice_temp)
+                dice_value = choice_temp if choice_temp else 5
+                new_score = score + dice_value*dice_results[choice_temp]
+                new_nb_available_dice = nb_available_dice - dice_results[choice_temp]
+                
+                #Compute the expected reward of the choice
+                reward_temp = self.expectancy(new_choices, new_nb_available_dice, new_score)
+                    
+                if reward_temp >= reward:
+                    reward = reward_temp
+                    choice = choice_temp
+            return(choice, reward)
 
 class PlayerAB(Player):
 
@@ -212,5 +227,12 @@ if __name__ == "__main__":
     initial_throw = dice2state((1, 3, 3, 5, 5, 5, 5, 0))
     tic = time.time()
     print(player.strategy(initial_throw, 0, 8, 0))
+    print(time.time() - tic)
+    
+
+    
+    throw = dice2state((5,))
+    tic = time.time()
+    print(player.strategy(throw, int('11111', 2), 1, 18))
     print(time.time() - tic)
     
