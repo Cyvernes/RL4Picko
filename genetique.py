@@ -2,10 +2,10 @@ from players import *
 from game import * 
 import numpy as np
 import math
-
+import matplotlib.pyplot as plt
 
 N_PLAYERS = 20
-N_EPOCH = 10
+N_EPOCH = 5
 N_GAME_SIMU = 5
 
 SURVIVAL_RATE = 0.4
@@ -19,7 +19,7 @@ PERCENTILES = [10,30, 50, 70, 90]
 
 
 if __name__ == "__main__":
-    percentiles_evol = [[]]*(len(PERCENTILES))
+    percentiles_evol = [[]]*(len(PERCENTILES)+2)
     N_survival = math.floor(SURVIVAL_RATE*N_PLAYERS) - 1
     player11 = PlayerAB(N_dice=N_DICE, domino_min=DOMINO_MIN,domino_max=DOMINO_MAX,r=R)
     player11.set_ab(1, 1)
@@ -54,7 +54,11 @@ if __name__ == "__main__":
             a = population[parent_idx].alpha
             b = population[parent_idx].beta
             population[idx].set_ab(a, b)
-        print(np.mean(evals))
+        
+        percentiles_evol[0].append(min(evals))
+        percentiles_evol[-1].append(max(evals))
+        for i, percent in enumerate(PERCENTILES):
+            percentiles_evol[i+1].append(np.percentile(evals, percent))
         # mutation
         for player in population:
             a = player.alpha
@@ -64,6 +68,11 @@ if __name__ == "__main__":
             b = max(0,min(2, b + db))
             player.set_ab(a, b)
 
+
+    epochs = list(range(1, N_EPOCH +1))
+    for evol in percentiles_evol:
+        plt.plot(epochs, evol)
+    plt.show()
 
 
             
