@@ -6,14 +6,14 @@ from players import *
 
 class Game:
 
-    def __init__(self, playerA : Player, playerB : Player) -> None:
-        self.domino_min = 21
-        self.domino_max = 36
+    def __init__(self, playerA : Player, playerB : Player, N_dice = 8, domino_min = 21, domino_max = 36, r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]) -> None:
+        self.domino_min = domino_min
+        self.domino_max = domino_max
         self.grill = (self.domino_max-self.domino_min+1)
         self.playerA = playerA
         self.playerB = playerB
-        self.N_dice = 8
-        self.r = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
+        self.N_dice = N_dice
+        self.r = r
 
     def reinit(self):
         self.grill = [True]* (self.domino_max-self.domino_min+1)
@@ -116,7 +116,7 @@ class Game:
         while not(self.over()):
             if display:
                 print(self)
-            if playing_player == playerA:
+            if playing_player == self.playerA:
                 logging.info("A plays")
             else:
                 logging.info("B plays")
