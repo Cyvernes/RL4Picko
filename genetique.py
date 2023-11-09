@@ -4,9 +4,9 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-N_PLAYERS = 20
-N_EPOCH = 5
-N_GAME_SIMU = 5
+N_PLAYERS = 40
+N_EPOCH = 50
+N_GAME_SIMU = 10
 
 SURVIVAL_RATE = 0.4
 
@@ -19,7 +19,7 @@ PERCENTILES = [10,30, 50, 70, 90]
 
 
 if __name__ == "__main__":
-    percentiles_evol = [[]]*(len(PERCENTILES)+2)
+    percentiles_evol = [[] for i in range(len(PERCENTILES)+2)]
     N_survival = math.floor(SURVIVAL_RATE*N_PLAYERS) - 1
     player11 = PlayerAB(N_dice=N_DICE, domino_min=DOMINO_MIN,domino_max=DOMINO_MAX,r=R)
     player11.set_ab(1, 1)
@@ -32,6 +32,7 @@ if __name__ == "__main__":
     
     tic = time.time()
     for epoch in range(N_EPOCH):
+        print(f"EPOCH: {epoch +1} /{N_EPOCH}")
         #Evaluation
         evals = [0]*N_PLAYERS
         for player_idx, player in enumerate(population):
@@ -55,10 +56,12 @@ if __name__ == "__main__":
             b = population[parent_idx].beta
             population[idx].set_ab(a, b)
         
+        
         percentiles_evol[0].append(min(evals))
         percentiles_evol[-1].append(max(evals))
         for i, percent in enumerate(PERCENTILES):
             percentiles_evol[i+1].append(np.percentile(evals, percent))
+               
         # mutation
         for player in population:
             a = player.alpha
@@ -70,8 +73,11 @@ if __name__ == "__main__":
 
 
     epochs = list(range(1, N_EPOCH +1))
-    for evol in percentiles_evol:
-        plt.plot(epochs, evol)
+    plt.plot(epochs, percentiles_evol[0], label =f"Worst player")
+    for i,evol in enumerate(percentiles_evol[1:-2]):
+        plt.plot(epochs, evol, label =f"top {PERCENTILES[i]}%")
+    plt.plot(epochs, percentiles_evol[-1], label =f"Best player")
+    plt.legend()
     plt.show()
 
 
