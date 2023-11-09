@@ -16,7 +16,7 @@ def fact(n: int):
 
 
 @functools.cache
-def proba(t : tuple, n : int):
+def proba(t : tuple,n : int):
     """Computes the probability of each state after drawing N dice
 
     :param t: state

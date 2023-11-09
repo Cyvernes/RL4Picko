@@ -37,24 +37,32 @@ class Game:
     def over(self) -> bool:
         return(not np.any(self.grill))
     
-    
+            
     def play_dice_part(self, player : Player) -> int:
         nb_available_dice = self.N_dice
         score = 0
         previous_choices = 0
-        
-        while 1:
+        for i in range(8): # At each turn, the number of dice is decreased by at least one (or the round is stopped). Thus we do at most 8 turns.
+            # Draw the dice
             dice_results = draw_dice(nb_available_dice)
             logging.info(f"dice: {dice_results}")
+            # Send the result to the play and let them chose what to do
             player_choice = player.play_dice(dice_results, previous_choices, nb_available_dice, score)
-            if player_choice == -1:
-                logging.info(f"obtains score: {score}")
-                return(score)
-            else:
-                nb_available_dice -= dice_results[player_choice]
-                score += (5 if player_choice == 0 else player_choice)*dice_results[player_choice]
-                previous_choices |= 1 << player_choice
+            logging.info(f" player's choice: {player_choice}")
             
+            if player_choice is None:# The Player can't choose, the round is failed
+                logging.info(f" player fails, reward = {-player.C}")
+                return(-player.C)
+            else:
+                score += (player_choice[0] if player_choice[0] else 5)*dice_results[player_choice[0]]
+                previous_choices |= 1 << player_choice[0]
+                if player_choice[1]:# Player decides to continue
+                    nb_available_dice -= dice_results[player_choice[0]]
+                    continue
+                else:# player decides to stop
+                    logging.info(f" player stops, reward = {score}")
+                    return(score)
+    
     
     def play_grill_part(self, player : Player, score : int) -> int:
         logging.info(f"state: {self}")
