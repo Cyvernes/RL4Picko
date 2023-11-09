@@ -173,9 +173,12 @@ class PlayerAB(Player):
         self.beta = beta
     
     def rewardfun(self, score : int , previous_choices : int) -> int:
-        if score and score == self.adv[0]:
-            return self.adv[1]
-        return super().rewardfun(score, previous_choices)
+        if previous_choices % 2 == 1:
+            if score and score == self.adv[0]:# Stealing
+                return self.adv[1]
+            return super().rewardfun(score, previous_choices)
+        else:
+            return(-self.C)
 
     def init_turn(self, grill: list[bool], r: list[int], top_domino_adv: int):
         # init C
