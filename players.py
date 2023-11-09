@@ -143,8 +143,7 @@ class Player:
             for choice_temp in possible_choices: # all other possible choices
                 #Compute previous_choices, score and nb_available_dice for the potential choice
                 new_choices = previous_choices | (1 << choice_temp)
-                dice_value = choice_temp if choice_temp else 5
-                new_score = score + dice_value*dice_results[choice_temp]
+                new_score = score + (choice_temp if choice_temp else 5)*dice_results[choice_temp]
                 new_nb_available_dice = nb_available_dice - dice_results[choice_temp]
                 
                 #Compute the expected reward of the choice
@@ -231,8 +230,18 @@ if __name__ == "__main__":
     
 
     
-    throw = dice2state((5,))
+    throw = dice2state((5,4))
     tic = time.time()
-    print(player.strategy(throw, int('11111', 2), 1, 18))
+    print(player.strategy(throw, int('11011', 2), 2, 15))
     print(time.time() - tic)
     
+
+    print(player.expectancy(int('111011', 2), 1, 20))
+    
+    print(all_possible_dice_outputs(1))
+    
+    print([proba(dice_output, 1) for dice_output in all_possible_dice_outputs(1)]) 
+    
+    print([player.strategy(dice_output, int('111011', 2), 1, 20) for dice_output in all_possible_dice_outputs(1)])
+                        
+                    
