@@ -17,6 +17,7 @@ class Player:
         self.basic_r = r
         self.dominos = []
         self.clear_cache = True
+        self.eval = None
 
     def reinit(self) -> None:
         self.C = 0
