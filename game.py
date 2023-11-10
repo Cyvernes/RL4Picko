@@ -177,7 +177,7 @@ class GD:
             self.beta -= (fabh - fab) * (self.lr/self.epoch)
 
             self.alphas.append(self.alpha)
-            self.betas.append(self.betas)
+            self.betas.append(self.beta)
 
 if __name__ == "__main__":
 
