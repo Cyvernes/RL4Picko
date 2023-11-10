@@ -4,9 +4,9 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-N_PLAYERS = 100
+N_PLAYERS = 10
 N_EPOCH = 50
-N_GAME_SIMU = 100
+N_GAME_SIMU = 1000
 
 SURVIVAL_RATE = 0.3
 
@@ -18,10 +18,7 @@ R = [1, 1, 2, 2, 3, 3, 4, 4]
 PERCENTILES = [10,30, 50, 70, 90]
 
 
-N_DICE = 2
-DOMINO_MIN = 6
-DOMINO_MAX = 9
-R = [1, 2, 3, 4]
+
 
 PERCENTILES = [10,30, 50, 70, 90]
 
@@ -35,7 +32,7 @@ if __name__ == "__main__":
     #init the population
     population = [PlayerAB(N_dice=N_DICE, domino_min=DOMINO_MIN,domino_max=DOMINO_MAX,r=R) for i in range(N_PLAYERS)]
     for i in range(N_PLAYERS):
-        a,b = np.random.uniform(0, 20), np.random.uniform(0, 20)
+        a,b = np.random.uniform(0, 2), np.random.uniform(0, 2)
         population[i].set_ab(a, b)
     
     tic = time.time()
@@ -52,14 +49,14 @@ if __name__ == "__main__":
                 average_score += game.score('A') - game.score('B')
             average_score = average_score / N_GAME_SIMU
             evals[player_idx] = average_score
+            player.eval = average_score
         
         if evals[0] > best_eval:
             best_eval = evals[0]
             bestab = (population[0].alpha, population[0].beta)
         # Selection and reproduction
-        sorting_list = sorted(zip(evals, population), key=lambda x: x[0], reverse=True)
-        population = [x for _, x in sorting_list]
-        evals = [x for x, _ in sorting_list]
+        population = sorted(population, key= lambda x: x.eval, reverse = True)
+        evals = sorted(evals, reverse=True)
         babies_idx = list(range(N_survival, N_PLAYERS))
         for i,idx in enumerate(babies_idx[:-2]):
             parent_idx = i % N_survival
@@ -79,7 +76,7 @@ if __name__ == "__main__":
         for player in population[:-2]:
             a = player.alpha
             b = player.beta
-            da, db = np.random.uniform(-1, 1), np.random.uniform(-1,  1)
+            da, db = np.random.uniform(-0.2, 0.2), np.random.uniform(-0.2,  0.2)
             a = max(0,min(20, a + da))
             b = max(0,min(20, b + db))
             player.set_ab(a, b)
