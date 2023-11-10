@@ -168,6 +168,7 @@ class GD:
 
     def gradient_descent(self):
         for epoch in range(self.n_epochs):
+            print(epoch)
 
             fab = self.simu(self.alpha, self.beta)
             fahb = self.simu(self.alpha + self.h, self.beta)
