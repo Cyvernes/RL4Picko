@@ -4,11 +4,11 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-N_PLAYERS = 20
+N_PLAYERS = 100
 N_EPOCH = 50
-N_GAME_SIMU = 50
+N_GAME_SIMU = 100
 
-SURVIVAL_RATE = 0.2
+SURVIVAL_RATE = 0.3
 
 N_DICE = 4
 DOMINO_MIN = 11
@@ -17,6 +17,13 @@ R = [1, 1, 2, 2, 3, 3, 4, 4]
 
 PERCENTILES = [10,30, 50, 70, 90]
 
+
+N_DICE = 2
+DOMINO_MIN = 6
+DOMINO_MAX = 9
+R = [1, 2, 3, 4]
+
+PERCENTILES = [10,30, 50, 70, 90]
 
 if __name__ == "__main__":
     percentiles_evol = [[] for i in range(len(PERCENTILES)+2)]
@@ -28,7 +35,7 @@ if __name__ == "__main__":
     #init the population
     population = [PlayerAB(N_dice=N_DICE, domino_min=DOMINO_MIN,domino_max=DOMINO_MAX,r=R) for i in range(N_PLAYERS)]
     for i in range(N_PLAYERS):
-        a,b = np.random.uniform(0, 2), np.random.uniform(0, 2)
+        a,b = np.random.uniform(0, 20), np.random.uniform(0, 20)
         population[i].set_ab(a, b)
     
     tic = time.time()
@@ -42,7 +49,7 @@ if __name__ == "__main__":
             for i in range(N_GAME_SIMU):
                 game.reinit()
                 game.play_game(display=False)
-                average_score += game.score('A')
+                average_score += game.score('A') - game.score('B')
             average_score = average_score / N_GAME_SIMU
             evals[player_idx] = average_score
         
@@ -61,7 +68,7 @@ if __name__ == "__main__":
             population[idx].set_ab(a, b)
         
         population[-1].set_ab(bestab[0], bestab[1])
-        print(f"Best Alpha, Beta: {bestab}")
+        print(f"Best Alpha, Beta: {bestab}, eval: {evals[0]}")
         
         percentiles_evol[0].append(min(evals))
         percentiles_evol[-1].append(max(evals))
@@ -72,10 +79,11 @@ if __name__ == "__main__":
         for player in population[:-2]:
             a = player.alpha
             b = player.beta
-            da, db = np.random.uniform(-0.1, 0.1), np.random.uniform(-0.1, 0.1)
-            a = max(0,min(2, a + da))
-            b = max(0,min(2, b + db))
+            da, db = np.random.uniform(-1, 1), np.random.uniform(-1,  1)
+            a = max(0,min(20, a + da))
+            b = max(0,min(20, b + db))
             player.set_ab(a, b)
+            player.reinit()
 
 
     epochs = list(range(1, N_EPOCH +1))
