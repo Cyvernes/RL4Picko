@@ -4,11 +4,11 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-N_PLAYERS = 10
-N_EPOCH = 50
-N_GAME_SIMU = 1000
+N_PLAYERS = 5
+N_EPOCH = 10
+N_GAME_SIMU = 50
 
-SURVIVAL_RATE = 0.3
+SURVIVAL_RATE = 1
 
 N_DICE = 4
 DOMINO_MIN = 11
@@ -32,7 +32,8 @@ if __name__ == "__main__":
     #init the population
     population = [PlayerAB(N_dice=N_DICE, domino_min=DOMINO_MIN,domino_max=DOMINO_MAX,r=R) for i in range(N_PLAYERS)]
     for i in range(N_PLAYERS):
-        a,b = np.random.uniform(0, 2), np.random.uniform(0, 2)
+        a = np.random.uniform(0, 2)
+        b = np.random.uniform(0, 2)
         population[i].set_ab(a, b)
     
     tic = time.time()
@@ -55,6 +56,7 @@ if __name__ == "__main__":
             best_eval = evals[0]
             bestab = (population[0].alpha, population[0].beta)
         # Selection and reproduction
+        """
         population = sorted(population, key= lambda x: x.eval, reverse = True)
         evals = sorted(evals, reverse=True)
         babies_idx = list(range(N_survival, N_PLAYERS))
@@ -73,14 +75,17 @@ if __name__ == "__main__":
             percentiles_evol[i+1].append(np.percentile(evals, percent))
                
         # mutation
+        
         for player in population[:-2]:
             a = player.alpha
             b = player.beta
-            da, db = np.random.uniform(-0.2, 0.2), np.random.uniform(-0.2,  0.2)
-            a = max(0,min(20, a + da))
-            b = max(0,min(20, b + db))
+            da = np.random.uniform(-0.2,  0.2)
+            db = np.random.uniform(-0.2, 0.2)
+            a = max(0, min(20, a + da))
+            b = max(0, min(20, b + db))
             player.set_ab(a, b)
             player.reinit()
+        """
 
 
     epochs = list(range(1, N_EPOCH +1))

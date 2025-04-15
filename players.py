@@ -120,7 +120,7 @@ class Player:
                )
     
     
-    #@functools.cache
+    @functools.cache
     def strategy(self, dice_results : tuple, previous_choices : int, nb_available_dice : int, score : int) -> Tuple[Tuple[int, int], int]:
         """Computes the optimal strategy using Bellman equation.
 
@@ -221,6 +221,12 @@ class Player_select_Tile_equal_score(Player):
         return(self.r[score - self.domino_min])
     
 if __name__ == "__main__":
+    
+    
+    player = Player()
+    tic = time.time()
+    print("player's expectancy:", player.expectancy(0, 8, 0))
+    print(time.time() - tic)
     
     player = Player()
     
